@@ -9,7 +9,7 @@ Premium Chatbot with Sentiment Analysis
    -> JSON-based conversation storage for full chat history
 
    Tier 2:
-   -> Statement-level sentiment analysis: Classifies user         messages as Awesome / Good / Neutral / Bad / Very Bad
+   -> Statement-level sentiment analysis: Classifies user messages as Awesome / Good / Neutral / Bad / Very Bad
 
    Additional Features:
    -> Voice input & output: Speak to the bot and hear responses
@@ -45,7 +45,7 @@ Chat with the bot in the GUI
 
    -> NLTK (VADER) – Sentiment analysis
 
-   -> gTTS & playsound – Text-to-speech output
+   -> gTTS  – Text-to-speech output
 
    -> speech_recognition – Voice input from microphone
 
