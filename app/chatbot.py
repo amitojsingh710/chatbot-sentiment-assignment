@@ -103,14 +103,13 @@ class ChatBot:
     # ---------------------------------------------------
     # 🎤 Speech → Text (Mic input)
     # ---------------------------------------------------
-    def listen(self):
+    def listen(self, timeout=5, phrase_time_limit=10):
         """Return text spoken through the mic."""
         try:
             with sr.Microphone() as source:
                 print("Listening...")
-                self.recognizer.adjust_for_ambient_noise(source)
-                audio = self.recognizer.listen(source)
-
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.4)
+                audio = sr.listen(source, timeout=timeout, phrase_time_limit=phrase_time_limit)
             text = self.recognizer.recognize_google(audio)
             print("Recognized:", text)
             return text

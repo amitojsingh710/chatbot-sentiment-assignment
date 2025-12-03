@@ -7,6 +7,7 @@ import random
 import os
 from playaudio import playaudio
 from gtts import gTTS 
+
 from .chatbot import ChatBot
 from .sentiment import SentimentAnalyzer
 from .storage import ConversationStorage
@@ -93,7 +94,7 @@ class ChatUI:
     def speak_async(self, text):
         def speak_job():
             try:
-                filename = f"tts_{int(time.time())}_{random.randint(1,9999)}.mp3"
+                filename = f"audio/tts_{int(time.time())}_{random.randint(1,9999)}.mp3"
                 tts = gTTS(text=text, lang="en", tld="co.uk", slow=False)
 
                 tts.save(filename)
@@ -103,6 +104,7 @@ class ChatUI:
             except Exception as e:
                 print("TTS Error:", e)
 
+        
         threading.Thread(target=speak_job, daemon=True).start()
 
     #####################################################################
@@ -159,19 +161,59 @@ class ChatUI:
         self.entry.delete(0, tk.END)
 
     #####################################################################
+    # def voice_input(self):
+    #     try:
+    #         with sr.Microphone() as source:
+    #             self.display_message("Bot", "🎤 Listening...")
+    #             audio = self.recognizer.listen(source)
+
+    #         text = self.recognizer.recognize_google(audio)
+    #         # self.entry.delete(0, tk.END)
+    #         self.entry.insert(0, text)
+    #         self.send_message()
+
+    #     except Exception:
+    #         self.display_message("Bot", "Could not understand audio.")
+
     def voice_input(self):
-        try:
-            with sr.Microphone() as source:
-                self.display_message("Bot", "🎤 Listening...")
-                audio = self.recognizer.listen(source)
+        # Disable button so user can't press twice
+        self.mic_button.config(state=tk.DISABLED)
 
-            text = self.recognizer.recognize_google(audio)
-            self.entry.delete(0, tk.END)
-            self.entry.insert(0, text)
-            self.send_message()
+        def worker():
+            try:
+                with sr.Microphone() as source:
+                    # Show message before blocking
+                    self.display_message("Bot", "🎤 Listening...")
 
-        except Exception:
-            self.display_message("Bot", "Could not understand audio.")
+                    # Noise cancel
+                    self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
+
+                    audio = self.recognizer.listen(source, timeout=6, phrase_time_limit=10)
+
+                # Convert speech to text
+                text = self.recognizer.recognize_google(audio)
+
+                # Put text into entry (must be done on main thread)
+                self.root.after(0, lambda: self.entry.insert(0, text))
+
+                # Send message (also must run on main thread)
+                self.root.after(0, self.send_message)
+
+            except sr.WaitTimeoutError:
+                self.root.after(0, lambda: self.display_message("Bot", "⏳ No speech detected."))
+            except sr.UnknownValueError:
+                self.root.after(0, lambda: self.display_message("Bot", "❌ Couldn't understand audio."))
+            except Exception as e:
+                self.root.after(0, lambda: self.display_message("Bot", f"⚠️ Voice error: {e}"))
+
+            finally:
+                # Always re-enable button
+                self.root.after(0, lambda: self.mic_button.config(state=tk.NORMAL))
+
+        # Thread for non-blocking UI
+        threading.Thread(target=worker, daemon=True).start()
+
+
 
     #####################################################################
     def speak_last_bot_message(self):
