@@ -1,0 +1,4 @@
+speech-recognition
+tkinter
+gTTS
+SentimentAnalyzer
